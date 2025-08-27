@@ -1,0 +1,51 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+
+<div class="p-6 text-white">
+    <h1 class="text-3xl font-bold mb-6">Checkout</h1>
+
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% csrf_token %}
+        
+        <!-- Shipping Info -->
+        <div class="bg-gray-800 p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Shipping Information</h2>
+            <input type="text" name="address" placeholder="Street Address" required class="w-full p-2 rounded mb-3 bg-gray-700 text-white">
+            <input type="text" name="city" placeholder="City" required class="w-full p-2 rounded mb-3 bg-gray-700 text-white">
+            <input type="text" name="state" placeholder="State" required class="w-full p-2 rounded mb-3 bg-gray-700 text-white">
+            <input type="text" name="zipcode" placeholder="Zip Code" required class="w-full p-2 rounded bg-gray-700 text-white">
+        </div>
+
+        <!-- Payment and Order Summary -->
+        <div class="bg-gray-800 p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Payment Method</h2>
+            <select name="payment_method" required class="w-full p-2 rounded mb-6 bg-gray-700 text-white">
+                <option value="">Select Payment Method</option>
+                <option value="pay_on_delivery">Pay on Delivery</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="paystack">Pay with Paystack</option>
+            </select>
+
+            <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
+            <ul class="mb-4 space-y-2">
+                {% for item in items %}
+                <li class="flex justify-between">
+                    <span>{{ item.product.name }} (x{{ item.quantity }})</span>
+                    <span>₦{{ item.get_total_price }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <p class="text-lg font-bold">Total: ₦{{ order_total }}</p>
+
+            <button type="submit" class="mt-6 w-full bg-green-600 hover:bg-green-500 text-white py-2 rounded">
+                Complete Order
+            </button>
+            <a href="{% url 'cart' %}" class="mt-4 inline-block text-center w-full bg-gray-600 hover:bg-gray-500 text-white py-2 rounded">
+                ← Back to Cart
+            </a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

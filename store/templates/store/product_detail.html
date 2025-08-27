@@ -1,0 +1,31 @@
+{% extends 'store/main.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Product Image -->
+        <div>
+            <img src="{{ product.imageURL }}" alt="{{ product.name }}" class="w-full h-auto object-cover rounded-lg shadow">
+        </div>
+
+        <!-- Product Details -->
+        <div class="flex flex-col justify-between">
+            <div>
+                <h2 class="text-3xl font-bold mb-2">{{ product.name }}</h2>
+                <p class="text-gray-600 mb-4">{{ product.description }}</p>
+                <p class="text-2xl font-semibold text-green-600 mb-6">₦{{ product.price }}</p>
+            </div>
+
+            <div class="mt-4">
+                <button 
+                    data-product="{{ product.id }}"
+                    class="add-to-cart-btn w-full bg-green-600 text-white py-3 rounded-lg text-lg font-semibold hover:bg-green-700 transition">
+                    Add to Cart
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

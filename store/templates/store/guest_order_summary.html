@@ -1,0 +1,41 @@
+{% extends 'store/main.html' %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto p-6">
+    <h2 class="text-2xl font-bold mb-6">Guest Order Summary</h2>
+
+    <h3 class="text-lg font-semibold mb-2">Shipping Information</h3>
+    <ul class="mb-4">
+        <li><strong>Address:</strong> {{ shipping.address }}</li>
+        <li><strong>City:</strong> {{ shipping.city }}</li>
+        <li><strong>State:</strong> {{ shipping.state }}</li>
+        <li><strong>Zip Code:</strong> {{ shipping.zipcode }}</li>
+        <li><strong>Payment Method:</strong> {{ shipping.payment_method }}</li>
+    </ul>
+
+    <h3 class="text-lg font-semibold mb-2">Order Items</h3>
+    <table class="w-full text-left border">
+        <thead>
+            <tr>
+                <th class="px-4 py-2">Product</th>
+                <th class="px-4 py-2">Quantity</th>
+                <th class="px-4 py-2">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr class="border-t">
+                <td class="px-4 py-2">{{ item.product.name }}</td>
+                <td class="px-4 py-2">{{ item.quantity }}</td>
+                <td class="px-4 py-2">₦{{ item.total }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="mt-6">
+        <p class="text-xl font-semibold">Total: ₦{{ total }}</p>
+        <a href="{% url 'store' %}" class="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Continue Shopping</a>
+    </div>
+</div>
+{% endblock %}

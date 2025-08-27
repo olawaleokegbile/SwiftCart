@@ -1,0 +1,25 @@
+{% extends 'store/main.html' %}
+
+{% block title %}Confirm Email{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow">
+    <h2 class="text-2xl font-bold mb-6 text-white">Confirm Your Email</h2>
+
+    {% if confirmation %}
+        <p class="text-gray-300 mb-6">
+            Please confirm that you want to use <strong>{{ confirmation.email_address.email }}</strong> as your email.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded font-medium">
+                Confirm
+            </button>
+        </form>
+    {% else %}
+        <p class="text-red-400">Invalid confirmation key.</p>
+        <a href="{% url 'account_login' %}" class="text-blue-400 hover:underline">Go to Login</a>
+    {% endif %}
+</div>
+{% endblock %}
