@@ -1,47 +1,46 @@
-{% extends 'store/main.html' %}
+{% extends 'store/auth_base.html' %}
 {% load widget_tweaks %}
 
+{% block title %}Sign Up | SwiftCart{% endblock %}
+{% block subtitle %}Join SwiftCart today {% endblock %}
+
 {% block content %}
-<div class="max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow">
-    <h2 class="text-2xl font-bold mb-6 text-white">Create Account</h2>
+<h2 class="text-2xl font-bold mb-6 text-center text-green-600">Create Account</h2>
 
-    <!-- Non-field errors (e.g. "This email is already taken") -->
-    {% if form.non_field_errors %}
-        <div class="bg-red-900 text-red-200 p-3 rounded text-sm mb-4">
-            {% for error in form.non_field_errors %}
-                {{ error }}
-            {% endfor %}
-        </div>
-    {% endif %}
-
-    <form method="post" class="space-y-4">
-        {% csrf_token %}
-
-        {% for field in form %}
-            <div>
-                <label class="block text-gray-300 mb-1">{{ field.label }}</label>
-
-                {{ field|add_class:"w-full p-2 bg-gray-700 border border-gray-600 rounded text-white" }}
-
-                <!-- Field-specific errors -->
-                {% if field.errors %}
-                    <div class="text-red-400 text-sm mt-1">
-                        {% for error in field.errors %}
-                            {{ error }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
+<!-- Non-field errors -->
+{% if form.non_field_errors %}
+    <div class="bg-red-100 text-red-600 p-3 rounded text-sm mb-4">
+        {% for error in form.non_field_errors %}
+            {{ error }}
         {% endfor %}
+    </div>
+{% endif %}
 
-        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white p-2 rounded font-medium">
-            Sign Up
-        </button>
-    </form>
+<form method="post" class="space-y-4">
+    {% csrf_token %}
 
-    <p class="text-gray-400 mt-4 text-center">
-        Already have an account?
-        <a href="{% url 'account_login' %}" class="text-blue-400 hover:underline">Log in</a>
-    </p>
-</div>
+    {% for field in form %}
+        <div>
+            <label class="block text-gray-700 mb-1">{{ field.label }}</label>
+            {{ field|add_class:"w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" }}
+
+            {% if field.errors %}
+                <div class="text-red-500 text-sm mt-1">
+                    {% for error in field.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 transition duration-200 text-white p-3 rounded-lg font-semibold shadow-md">
+         Sign Up
+    </button>
+</form>
+
+<p class="text-gray-600 mt-6 text-center">
+    Already have an account?
+    <a href="{% url 'account_login' %}" class="text-blue-600 hover:underline font-medium">Log in</a>
+</p>
 {% endblock %}

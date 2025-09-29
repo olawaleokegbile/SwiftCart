@@ -1,47 +1,37 @@
 {% extends 'store/main.html' %}
-{% load static %}
+{% load humanize %}
+
 {% block content %}
-<div class="p-6 text-white">
+<div class="p-6">
     <h1 class="text-3xl font-bold mb-6">Your Shopping Cart</h1>
 
     {% if cart_items %}
-    <div class="overflow-x-auto rounded-lg shadow">
-        <table class="min-w-full divide-y divide-gray-700">
-            <thead class="bg-gray-800 text-left">
+    <div class="overflow-x-auto rounded-lg shadow bg-white">
+        <table class="min-w-full divide-y divide-gray-200 text-lg">
+            <thead class="bg-gray-100">
                 <tr>
-                    <th class="px-6 py-3">Product</th>
-                    <th class="px-6 py-3">Price</th>
-                    <th class="px-6 py-3">Quantity</th>
-                    <th class="px-6 py-3">Total</th>
+                    <th class="px-6 py-3 text-left font-semibold">Product</th>
+                    <th class="px-6 py-3 text-center font-semibold">Price</th>
+                    <th class="px-6 py-3 text-center font-semibold">Quantity</th>
+                    <th class="px-6 py-3 text-center font-semibold">Total</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-700 bg-gray-900">
+            <tbody class="divide-y divide-gray-200">
                 {% for item in cart_items %}
                 <tr class="cart-item" data-product-id="{{ item.product.id }}">
                     <td class="px-6 py-4 flex items-center gap-4">
-                        <img src="{{ item.image_url }}" alt="{{ item.product_name }}"
-                             class="w-16 h-16 object-cover rounded">
-                        <span>{{ item.product_name }}</span>
+                        <img src="{{ item.image_url }}" alt="{{ item.product_name }}" class="w-16 h-16 object-cover rounded">
+                        <span class="font-medium">{{ item.product_name }}</span>
                     </td>
-
-                    <td class="px-6 py-4">
-                        ₦<span class="product-price">{{ item.price }}</span>
-                    </td>
-
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-2">
-                            <!-- Minus -->
-                            <button data-product="{{ item.product_id }}" class="remove-from-cart-btn bg-gray-700 hover:bg-gray-600 px-2 rounded text-xl">−</button>
-                            <!-- Quantity display -->
-                            <span class="px-2" id="qty-{{ item.product_id }}">{{ item.quantity }}</span>
-                            <!-- Plus -->
-                            <button data-product="{{ item.product_id }}" class="add-to-cart-btn bg-gray-700 hover:bg-gray-600 px-2 rounded text-xl">+</button>
+                    <td class="px-6 py-4 text-center font-medium">₦<span class="product-price">{{ item.price|intcomma }}</span></td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button data-product="{{ item.product_id }}" class="remove-from-cart-btn bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-xl">−</button>
+                            <span id="qty-{{ item.product_id }}" class="font-semibold">{{ item.quantity }}</span>
+                            <button data-product="{{ item.product_id }}" class="add-to-cart-btn bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-xl">+</button>
                         </div>
                     </td>
-
-                    <td class="px-6 py-4 font-semibold">
-                        ₦<span id="total-{{ item.product_id }}">{{ item.total_price }}</span>
-                    </td>
+                    <td class="px-6 py-4 text-center font-semibold">₦<span id="total-{{ item.product_id }}">{{ item.total_price|intcomma }}</span></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -49,22 +39,16 @@
     </div>
 
     <div class="mt-6 text-right">
-        <p class="text-xl font-semibold">Cart Total: ₦<span id="cart-grand-total">{{ cart_total }}</span></p>
+        <p class="text-2xl font-bold">Cart Total: ₦<span id="cart-grand-total">{{ cart_total|intcomma }}</span></p>
     </div>
 
     <div class="flex justify-between mt-8">
-        <a href="{% url 'store' %}" class="bg-gray-600 hover:bg-gray-500 px-5 py-2 rounded text-white">
-            ← Continue Shopping
-        </a>
-        <a href="{% url 'checkout' %}" class="bg-green-600 hover:bg-green-500 px-5 py-2 rounded text-white">
-            Proceed to Checkout →
-        </a>
+        <a href="{% url 'store' %}" class="bg-gray-600 hover:bg-gray-500 px-5 py-2 rounded text-white text-lg">← Continue Shopping</a>
+        <a href="{% url 'checkout' %}" class="bg-green-600 hover:bg-green-500 px-5 py-2 rounded text-white text-lg">Proceed to Checkout →</a>
     </div>
     {% else %}
-    <p class="text-gray-400">Your cart is empty.</p>
-    <a href="{% url 'store' %}" class="mt-4 inline-block bg-blue-700 hover:bg-blue-600 px-5 py-2 rounded text-white">
-        Start Shopping
-    </a>
+    <p class="text-gray-600 text-lg">Your cart is empty.</p>
+    <a href="{% url 'store' %}" class="mt-4 inline-block bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded text-white text-lg">Start Shopping</a>
     {% endif %}
 </div>
 {% endblock %}

@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    #django.contrib.sites.middleware.CurrentSiteMiddleware',
+    'django.contrib.humanize',
+    #'django.contrib.sites.middleware.CurrentSiteMiddleware',
 
     'store',  # Custom app for the ecommerce store
     'allauth',
@@ -66,7 +67,6 @@ ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5
 ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300  # Lock after 5 attempts for 5 mins
 
-# Email backend configuration for SendGrid
 
 
 # Email configuration for Gmail SMTP
@@ -76,8 +76,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-
-DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
+DEFAULT_FROM_EMAIL = 'olawaleokegbile@gmail.com'
 
 LOGIN_REDIRECT_URL = '/'
 
@@ -101,7 +100,7 @@ ROOT_URLCONF = 'ecommerce.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # Global templates directory
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

@@ -1,0 +1,48 @@
+{% extends "store/main.html" %}
+{% load humanize %}
+
+{% block title %}Order #{{ order.id }} | SwiftCart{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6">
+    <h2 class="text-2xl font-bold mb-4">🛍️ Order #{{ order.id }}</h2>
+    <p class="text-gray-600">Placed on {{ order.date_ordered|date:"M d, Y H:i" }}</p>
+    <p class="text-gray-600 mb-4">
+        Status:
+        {% if order.complete %}
+            <span class="px-2 py-1 bg-green-100 text-green-700 rounded">Completed</span>
+        {% else %}
+            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">Pending</span>
+        {% endif %}
+    </p>
+
+    <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Product</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Quantity</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Price</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr class="border-t">
+                <td class="px-4 py-2 text-gray-700">{{ item.product.name }}</td>
+                <td class="px-4 py-2 text-gray-700">{{ item.quantity }}</td>
+                <td class="px-4 py-2 text-gray-700">₦{{ item.product.price|intcomma }}</td>
+                <td class="px-4 py-2 font-semibold text-gray-900">₦{{ item.get_total|intcomma }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="mt-6 text-right">
+        <p class="text-xl font-bold">Grand Total: ₦{{ order.get_cart_total|intcomma }}</p>
+    </div>
+
+    <div class="mt-6">
+        <a href="{% url 'profile' %}" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded">← Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

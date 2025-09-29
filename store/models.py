@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User 
+from PIL import Image
 
 # Create your models here.
 class Customer(models.Model):
@@ -10,6 +11,25 @@ class Customer(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    address = models.CharField(max_length=255, null=True, blank=True)
+    profile_picture = models.ImageField(default='profile/default.jpg', upload_to='profile_pics')
+
+    def __str__(self):
+        return f'{self.user.username} Profile'
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        img = Image.open(self.profile_picture.path)
+
+        if img.height > 300 or img.width > 300:
+            output_size = (300, 300)
+            img.thumbnail(output_size)
+            img.save(self.profile_picture.path)
     
 class Product(models.Model):
     name = models.CharField(max_length=200)
@@ -36,6 +56,22 @@ class Order(models.Model):
 
     def __str__(self):
         return str(self.id)
+    
+    @property
+    def get_cart_total(self):
+        orderitems = self.orderitem_set.all()
+        total = sum([item.get_total_price for item in orderitems])
+        return total
+    
+    @property
+    def get_cart_items(self):
+        orderitems = self.orderitem_set.all()
+        total = sum([item.quantity for item in orderitems])
+        return total
+    
+    @property
+    def get_total_price(self):
+        return sum(item.get_total() for item in self.items.all())
 
 class OrderItem(models.Model):
     product = models.ForeignKey(Product, null=True, blank=True, on_delete=models.SET_NULL)
@@ -51,6 +87,10 @@ class OrderItem(models.Model):
         if self.product and self.product.price:
             return self.product.price * self.quantity
         return 0
+    
+    @property
+    def get_total(self):
+        return self.product.price * self.quantity
     
 class ShippingAddress(models.Model):
     customer = models.ForeignKey(Customer, null=True, blank=True, on_delete=models.SET_NULL)

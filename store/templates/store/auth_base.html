@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}SwiftCart{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Your CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="icon" href="{% static 'images/swiftcart.png' %}" type="image/x-icon">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-white via-red-50 to-gray-100 text-gray-800 flex flex-col">
+
+    <!-- Header (same as main.html) -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center p-4">
+            <!-- Logo -->
+            <div class="flex items-center gap-2">
+                <img src="{% static 'images/swiftcart.png' %}" alt="SwiftCart Logo" class="h-8 w-8">
+                <span class="text-2xl font-bold text-red-600">SwiftCart</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section (smaller for auth pages) -->
+    <section class="bg-gradient-to-r from-red-100 via-white to-red-50 py-10 shadow-inner text-center">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900">
+            {% block subtitle %}Welcome to <span class="text-red-600">SwiftCart</span>{% endblock %}
+        </h1>
+        <p class="text-gray-600 mt-2">Sign in to continue your shopping journey </p>
+    </section>
+
+    <!-- Auth Container -->
+    <main class="flex-grow flex items-center justify-center py-10">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-6 text-center text-gray-500 text-sm">
+        &copy; {% now "Y" %} SwiftCart. All rights reserved.
+    </footer>
+
+</body>
+</html>

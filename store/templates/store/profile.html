@@ -1,0 +1,143 @@
+{% extends "store/main.html" %}
+{% load widget_tweaks %}
+{% load humanize %}
+
+
+{% block title %}Dashboard | SwiftCart{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-8">
+
+    <!-- Profile Section -->
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-2xl font-bold mb-4"> My Profile</h2>
+
+        <form method="POST" enctype="multipart/form-data" id="profileForm" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Profile Picture -->
+            <div class="flex items-center gap-4">
+                <img src="{{ request.user.profile.profile_picture.url }}" 
+                     alt="Profile Picture"
+                     class="h-20 w-20 rounded-full object-cover border">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Change Picture</label>
+                    {{ p_form.profile_picture }}
+                </div>
+            </div>
+
+            <!-- Editable Fields -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-gray-600">First Name</label>
+                    {{ u_form.first_name|add_class:"mt-1 block w-full border-gray-300 rounded-lg shadow-sm disabled:bg-gray-100"|attr:"disabled:disabled" }}
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600">Last Name</label>
+                    {{ u_form.last_name|add_class:"mt-1 block w-full border-gray-300 rounded-lg shadow-sm disabled:bg-gray-100"|attr:"disabled:disabled" }}
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600">Email</label>
+                    {{ u_form.email|add_class:"mt-1 block w-full border-gray-300 rounded-lg shadow-sm disabled:bg-gray-100"|attr:"disabled:disabled" }}
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600">Phone</label>
+                    {{ p_form.phone|add_class:"mt-1 block w-full border-gray-300 rounded-lg shadow-sm disabled:bg-gray-100"|attr:"disabled:disabled" }}
+                </div>
+            </div>
+
+            <!-- Address -->
+            <div>
+                <label class="block text-sm text-gray-600">Address</label>
+                {{ p_form.address|add_class:"mt-1 block w-full border-gray-300 rounded-lg shadow-sm disabled:bg-gray-100"|attr:"disabled:disabled" }}
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-3">
+                <button type="button" id="editBtn"
+                    class="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition">
+                     Edit
+                </button>
+                <button type="submit" id="saveBtn"
+                    class="hidden bg-green-600 text-white px-5 py-2 rounded-lg shadow hover:bg-green-700 transition">
+                     Save
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- User Stats -->
+    <div class="bg-gray-50 shadow rounded-lg p-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+        <div class="p-4 bg-white shadow-sm rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-700">📦 Total Orders</h3>
+            <p class="text-2xl font-bold text-red-600">{{ total_orders }}</p>
+        </div>
+        <div class="p-4 bg-white shadow-sm rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-700">⏳ Pending Orders</h3>
+            <p class="text-2xl font-bold text-yellow-500">{{ pending_orders }}</p>
+        </div>
+        <div class="p-4 bg-white shadow-sm rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-700">🕒 Last Login</h3>
+            <p class="text-md font-medium text-gray-600">{{ last_login|date:"M d, Y H:i" }}</p>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-2xl font-bold mb-4">🛍️ Recent Orders</h2>
+        <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Order ID</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Date</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Status</th>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in order_history %}
+                <tr class="border-t">
+                    <td class="px-4 py-2 text-gray-700">
+                        <a href="{% url 'order_detail' order.id %}" class="text-blue-600 hover:underline">#{{ order.id }}</a>
+                    </td>
+                    <td class="px-4 py-2 text-gray-700">{{ order.date_ordered|date:"M d, Y" }}</td>
+                    <td class="px-4 py-2">
+                        {% if order.complete %}
+                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded">Completed</span>
+                        {% else %}
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-2 font-semibold text-gray-900">
+                        ₦{{ order.get_cart_total|intcomma }} 
+                        <span class="text-sm text-gray-500">({{ order.get_cart_items }} items)</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-4 py-4 text-center text-gray-500">
+                        No orders found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const editBtn = document.getElementById("editBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const inputs = document.querySelectorAll("#profileForm input, #profileForm textarea");
+
+    editBtn.addEventListener("click", function () {
+        inputs.forEach(el => el.removeAttribute("disabled"));
+        saveBtn.classList.remove("hidden");
+        editBtn.classList.add("hidden");
+    });
+});
+</script>
+{% endblock %}

@@ -7,10 +7,18 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import  User
 from django.contrib.auth import authenticate, login, logout
 from .models import Customer
+from .forms import UserUpdateForm,ProfileUpdateForm
 import json
 
 
 # Create your views here.
+def index(request):
+    product = product = Product.objects.all()[:6]  # Display only 6 products on the homepage
+    context = {
+        'products': product,
+    }
+    return render(request, "store/index.html", context)
+
 def store(request):
     product_list = Product.objects.all()
     paginator = Paginator(product_list, 6)  # Show 6 products per page
@@ -21,6 +29,57 @@ def store(request):
         'page_obj': page_obj,    
     }
     return render(request, 'store/store.html', context)
+
+def contact(request):
+    return render(request, 'store/contact.html')
+
+@login_required
+def profile(request):
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            return redirect('profile')
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=request.user.profile)
+
+    # Total completed orders
+    total_orders = Order.objects.filter(
+        customer=request.user.customer, complete=True
+    ).count()
+
+    # Pending orders (only if they have items)
+    pending_orders = (
+        Order.objects.filter(customer=request.user.customer, complete=False)
+        .filter(orderitem__isnull=False)   # ✅ exclude empty carts
+        .distinct()
+        .count()
+    )
+
+    # Last login
+    last_login = request.user.last_login
+
+    # Recent orders (latest 5, excluding empty carts)
+    order_history = (
+        Order.objects.filter(customer=request.user.customer)
+        .filter(orderitem__isnull=False)   # ✅ exclude empty carts
+        .order_by("-date_ordered")[:5]
+    )
+
+    context = {
+        "u_form": u_form,
+        "p_form": p_form,
+        "total_orders": total_orders,
+        "pending_orders": pending_orders,
+        "last_login": last_login,
+        "order_history": order_history,
+    }
+
+    return render(request, 'store/profile.html', context)
+
 
 # Helper to get or create cart for logged-in user 
 
@@ -178,6 +237,16 @@ def guest_order_summary(request):
     }
 
     return render(request, 'store/guest_order_summary.html', context)
+
+@login_required
+def order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id, customer=request.user.customer)
+
+    context = {
+        "order": order,
+        "items": order.orderitem_set.all(),
+    }
+    return render(request, "store/order_detail.html", context)
 
 def add_to_cart(request):
     """
