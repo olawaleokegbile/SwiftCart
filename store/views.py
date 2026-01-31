@@ -1,4 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
 from django.core.paginator import Paginator
 from .models import Customer, Product, Order, OrderItem, ShippingAddress
 from django.contrib.auth.decorators import login_required
@@ -13,7 +16,7 @@ import json
 
 # Create your views here.
 def index(request):
-    product = product = Product.objects.all()[:6]  # Display only 6 products on the homepage
+    product = Product.objects.all()[:6]  # Display only 6 products on the homepage
     context = {
         'products': product,
     }
@@ -31,6 +34,28 @@ def store(request):
     return render(request, 'store/store.html', context)
 
 def contact(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+
+        full_message = f"Message from {name} ({email}):\n\n{message}"
+
+        try:
+            send_mail(
+                subject=f"Contact Form: {subject}",
+                message=full_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[settings.DEFAULT_FROM_EMAIL], # Send to admin/support
+                fail_silently=False,
+            )
+            messages.success(request, 'Your message has been sent successfully! We will get back to you soon.')
+        except Exception as e:
+            messages.error(request, 'Something went wrong. Please try again later.')
+        
+        return redirect('contact')
+
     return render(request, 'store/contact.html')
 
 @login_required
@@ -54,7 +79,7 @@ def profile(request):
     # Pending orders (only if they have items)
     pending_orders = (
         Order.objects.filter(customer=request.user.customer, complete=False)
-        .filter(orderitem__isnull=False)   # ✅ exclude empty carts
+        .filter(orderitem__isnull=False)   #  exclude empty carts
         .distinct()
         .count()
     )
@@ -65,7 +90,7 @@ def profile(request):
     # Recent orders (latest 5, excluding empty carts)
     order_history = (
         Order.objects.filter(customer=request.user.customer)
-        .filter(orderitem__isnull=False)   # ✅ exclude empty carts
+        .filter(orderitem__isnull=False)   # exclude empty carts
         .order_by("-date_ordered")[:5]
     )
 
@@ -134,6 +159,25 @@ def cart(request):
             })
             cart_total += total_price
 
+    else:
+        # Guest user - retrieve from session
+        cart = get_session_cart(request)
+        for product_id, quantity in cart.items():
+            try:
+                product = Product.objects.get(id=product_id)
+                total_price = product.price * quantity
+                cart_items.append({
+                    'product_id': product.id,
+                    'product_name': product.name,
+                    'image_url': product.imageURL,
+                    'price': product.price,
+                    'quantity': quantity,
+                    'total_price': total_price
+                })
+                cart_total += total_price
+            except Product.DoesNotExist:
+                continue
+
     # AJAX? -> return JSON (used to update the cart screen without reload)
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({
@@ -199,6 +243,14 @@ def checkout(request):
                 'zipcode': zipcode,
                 'payment_method': payment_method
             }
+            
+            # Move cart items to a separate session key for the summary page
+            request.session['guest_order_items'] = request.session.get('cart', {})
+            
+            # Clear the active cart
+            request.session['cart'] = {}
+            request.session.modified = True
+            
             return redirect('guest_order_summary') 
 
     context = {
@@ -213,7 +265,7 @@ def order_complete(request):
 
 def guest_order_summary(request):
     shipping_info = request.session.get('shipping_info')
-    cart = get_session_cart(request)
+    cart = request.session.get('guest_order_items', {})
 
     items = []
     total = 0

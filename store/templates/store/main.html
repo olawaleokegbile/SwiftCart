@@ -9,6 +9,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-white via-red-50 to-gray-100 text-gray-800 flex flex-col">
+    <script>
+        var user = '{{ request.user }}';
+        var isAuthenticated = {{  request.user.is_authenticated|yesno:"true,false" }};
+    </script>
 
     <!-- Header -->
     <header class="bg-white shadow-md sticky top-0 z-50">
@@ -71,6 +75,15 @@
 
     <!-- Page Content -->
     <main class="container mx-auto flex-grow p-6">
+        {% if messages %}
+            <div class="max-w-4xl mx-auto mb-6">
+                {% for message in messages %}
+                    <div class="p-4 rounded-lg shadow-md {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 
@@ -79,6 +92,6 @@
         &copy; {% now "Y" %} SwiftCart. All rights reserved.
     </footer>
 
-    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/main.js' %}?v={% now 'U' %}"></script>
 </body>
 </html>
