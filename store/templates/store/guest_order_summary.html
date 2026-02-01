@@ -4,34 +4,52 @@
 <div class="max-w-3xl mx-auto p-6">
     <h2 class="text-2xl font-bold mb-6">Guest Order Summary</h2>
 
-    <h3 class="text-lg font-semibold mb-2">Shipping Information</h3>
-    <ul class="mb-4">
-        <li><strong>Address:</strong> {{ shipping.address }}</li>
-        <li><strong>City:</strong> {{ shipping.city }}</li>
-        <li><strong>State:</strong> {{ shipping.state }}</li>
-        <li><strong>Zip Code:</strong> {{ shipping.zipcode }}</li>
-        <li><strong>Payment Method:</strong> {{ shipping.payment_method }}</li>
-    </ul>
+    <div class="bg-green-50 border border-green-200 p-4 rounded-lg mb-8 text-green-800">
+        <h3 class="font-bold flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Order Confirmed!
+        </h3>
+        <p class="text-sm">Thank you for your purchase. Your order ID is <strong>#{{ order_id }}</strong></p>
+    </div>
 
-    <h3 class="text-lg font-semibold mb-2">Order Items</h3>
-    <table class="w-full text-left border">
-        <thead>
-            <tr>
-                <th class="px-4 py-2">Product</th>
-                <th class="px-4 py-2">Quantity</th>
-                <th class="px-4 py-2">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in items %}
-            <tr class="border-t">
-                <td class="px-4 py-2">{{ item.product.name }}</td>
-                <td class="px-4 py-2">{{ item.quantity }}</td>
-                <td class="px-4 py-2">₦{{ item.total }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div>
+            <h3 class="text-lg font-bold mb-3 text-gray-800">Shipping Details</h3>
+            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-2 text-sm text-gray-600">
+                <p><span class="font-bold text-gray-800">Address:</span> {{ shipping.address }}</p>
+                <p><span class="font-bold text-gray-800">City:</span> {{ shipping.city }}</p>
+                <p><span class="font-bold text-gray-800">State:</span> {{ shipping.state }}</p>
+                <p><span class="font-bold text-gray-800">Zip Code:</span> {{ shipping.zipcode }}</p>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="text-lg font-bold mb-3 text-gray-800">Order Items</h3>
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-8">
+        <table class="w-full text-left">
+            <thead class="bg-gray-50 border-b border-gray-100">
+                <tr>
+                    <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Product</th>
+                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase">Qty</th>
+                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase">Total</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for item in items %}
+                <tr>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-bold text-gray-900">{{ item.product.name }}</div>
+                        <div class="text-xs text-gray-500">₦{{ item.product.price }} each</div>
+                    </td>
+                    <td class="px-6 py-4 text-center text-sm text-gray-600">{{ item.quantity }}</td>
+                    <td class="px-6 py-4 text-right text-sm font-bold text-gray-900">₦{{ item.get_total_price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     <div class="mt-6">
         <p class="text-xl font-semibold">Total: ₦{{ total }}</p>

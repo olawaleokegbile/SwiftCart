@@ -1,0 +1,70 @@
+/* Admin Login Logo Fix */
+.login-logo img {
+    max-width: 150px !important;
+    height: auto !important;
+    margin-bottom: 15px;
+}
+
+/* Sidebar Branding Fix */
+.brand-link {
+    padding: 1rem 0.5rem !important;
+    background-color: #dc3545 !important;
+    /* Matches danger color */
+}
+
+.brand-text {
+    font-weight: 800 !important;
+    letter-spacing: 0.5px;
+    font-size: 1.25rem !important;
+}
+
+/* Sidebar UI Improvements */
+.nav-sidebar .nav-link p {
+    font-weight: 500;
+}
+
+.nav-sidebar .nav-item {
+    margin-bottom: 2px;
+}
+
+/* Dashboard Cards */
+.card {
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    border: none !important;
+}
+
+.card-header {
+    background-color: transparent !important;
+    border-bottom: 1px solid rgba(0, 0, 0, .05) !important;
+    padding: 1.25rem !important;
+}
+
+.card-title {
+    font-weight: 700 !important;
+    color: #334155 !important;
+}
+
+/* Navbar */
+.main-header {
+    border-bottom: 1px solid rgba(0, 0, 0, .05) !important;
+}
+
+/* Tables */
+.table thead th {
+    background-color: #f8fafc !important;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    border-bottom: 2px solid #e2e8f0 !important;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    padding: 0.5rem 1rem !important;
+}

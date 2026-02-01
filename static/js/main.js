@@ -144,4 +144,27 @@ window.addEventListener("load", function () {
         return val;
     }
 
+    /* ========= AUTO DISMISS (MESSAGES) ========= */
+    const messageAlerts = document.querySelectorAll('.message-alert');
+    messageAlerts.forEach(alert => {
+        // Function to hide and remove the alert
+        const dismiss = () => {
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 500);
+        };
+
+        // Auto-dismiss after 5 seconds
+        const timer = setTimeout(dismiss, 5000);
+
+        // Manual dismiss
+        const closeBtn = alert.querySelector('.close-message');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                clearTimeout(timer);
+                dismiss();
+            });
+        }
+    });
+
 });

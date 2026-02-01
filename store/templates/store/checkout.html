@@ -7,6 +7,15 @@
         <!-- Shipping -->
         <div class="bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-semibold mb-4">Shipping Information</h2>
+            {% if not user.is_authenticated %}
+                <div class="mb-4 space-y-3">
+                    <p class="text-sm text-gray-500 mb-2 font-medium">Contact Details</p>
+                    <input type="text" name="name" placeholder="Full Name" required class="w-full p-2 rounded border focus:ring-2 focus:ring-red-500 outline-none">
+                    <input type="email" name="email" placeholder="Email Address" required class="w-full p-2 rounded border focus:ring-2 focus:ring-red-500 outline-none">
+                </div>
+                <hr class="my-4 border-gray-100">
+            {% endif %}
+            <p class="text-sm text-gray-500 mb-2 font-medium">Delivery Address</p>
             <input type="text" name="address" placeholder="Street Address" required class="w-full p-2 rounded mb-3 border">
             <input type="text" name="city" placeholder="City" required class="w-full p-2 rounded mb-3 border">
             <input type="text" name="state" placeholder="State" required class="w-full p-2 rounded mb-3 border">

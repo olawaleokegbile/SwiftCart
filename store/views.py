@@ -16,15 +16,15 @@ import json
 
 # Create your views here.
 def index(request):
-    product = Product.objects.all()[:6]  # Display only 6 products on the homepage
+    products = Product.objects.all().order_by('-id')[:8]  # Show latest 8 products for a balanced grid
     context = {
-        'products': product,
+        'products': products,
     }
     return render(request, "store/index.html", context)
 
 def store(request):
-    product_list = Product.objects.all()
-    paginator = Paginator(product_list, 6)  # Show 6 products per page
+    product_list = Product.objects.all().order_by('-id')
+    paginator = Paginator(product_list, 12)  # Increased count for better store experience
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)       
     context = {
@@ -235,17 +235,50 @@ def checkout(request):
             order.save()
             return redirect('order_complete')  
         else:
-            # For guest checkout, which stores the shipping info in session or database
-            request.session['shipping_info'] = {
-                'address': address,
-                'city': city,
-                'state': state,
-                'zipcode': zipcode,
-                'payment_method': payment_method
-            }
-            
-            # Move cart items to a separate session key for the summary page
-            request.session['guest_order_items'] = request.session.get('cart', {})
+            # GUEST CHECKOUT: Create records in database
+            name = request.POST.get('name')
+            email = request.POST.get('email')
+
+            # 1. Get or Create Guest Customer (linked by email)
+            guest_customer, created = Customer.objects.get_or_create(
+                email=email,
+            )
+            if created:
+                guest_customer.name = name
+                guest_customer.save()
+
+            # 2. Create the Order
+            guest_order = Order.objects.create(
+                customer=guest_customer,
+                complete=True,
+                transaction_id=f"GUEST-{json.dumps(request.session.get('cart', {})).__hash__()}" # Basic unique hash for now
+            )
+
+            # 3. Create Shipping Address
+            ShippingAddress.objects.create(
+                customer=guest_customer,
+                order=guest_order,
+                address=address,
+                city=city,
+                state=state,
+                zipcode=zipcode
+            )
+
+            # 4. Create OrderItems from Session Cart
+            cart = get_session_cart(request)
+            for product_id, quantity in cart.items():
+                try:
+                    product = Product.objects.get(id=product_id)
+                    OrderItem.objects.create(
+                        product=product,
+                        order=guest_order,
+                        quantity=quantity
+                    )
+                except Product.DoesNotExist:
+                    continue
+
+            # 5. Store order ID in session for the summary page
+            request.session['last_guest_order_id'] = guest_order.id
             
             # Clear the active cart
             request.session['cart'] = {}
@@ -264,28 +297,23 @@ def order_complete(request):
     return render(request, 'store/order_complete.html')
 
 def guest_order_summary(request):
-    shipping_info = request.session.get('shipping_info')
-    cart = request.session.get('guest_order_items', {})
-
-    items = []
-    total = 0
-    for product_id, quantity in cart.items():
+    order_id = request.session.get('last_guest_order_id')
+    if order_id:
         try:
-            product = Product.objects.get(id=product_id)
-            subtotal = product.price * quantity
-            items.append({
-                'product': product,
-                'quantity': quantity,
-                'total': subtotal
-            })
-            total += subtotal
-        except Product.DoesNotExist:
-            continue
+            order = Order.objects.get(id=order_id)
+            shipping_info = ShippingAddress.objects.filter(order=order).first()
+            items = order.orderitem_set.all()
+            total = order.get_cart_total
+        except Order.DoesNotExist:
+            return redirect('store')
+    else:
+        return redirect('store')
 
     context = {
         'shipping': shipping_info,
         'items': items,
-        'total': total
+        'total': total,
+        'order_id': order_id
     }
 
     return render(request, 'store/guest_order_summary.html', context)
