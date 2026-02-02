@@ -30,7 +30,9 @@
         <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900">
             {% block subtitle %}Welcome to <span class="text-red-600">SwiftCart</span>{% endblock %}
         </h1>
-        <p class="text-gray-600 mt-2">Sign in to continue your shopping journey </p>
+        <p class="text-gray-600 mt-2">
+            {% block subtitle_description %}Sign in to continue your shopping journey{% endblock %}
+        </p>
     </section>
 
     <!-- Auth Container -->

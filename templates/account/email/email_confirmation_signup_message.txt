@@ -1,0 +1,2 @@
+{% load account %}{% load i18n %}{% user_display user as user_display %}
+{% blocktranslate with site_name=current_site.name site_domain=current_site.domain %}Hello from SwiftCart! Thank you for signing up. Please confirm your email address by following this link: {{ activate_url }}{% endblocktranslate %}

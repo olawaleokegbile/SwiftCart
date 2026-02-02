@@ -1,0 +1,52 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Confirm Your Email</title>
+</head>
+
+<body style="font-family: Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 0;">
+    <div
+        style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+
+        <!-- Header -->
+        <div style="text-align: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 20px;">
+            <h1 style="color: #dc2626; font-size: 24px; margin: 0;">SwiftCart</h1>
+        </div>
+
+        <!-- Content -->
+        <p style="color: #374151; font-size: 16px; line-height: 1.5;">
+            Hello from SwiftCart!
+        </p>
+
+        <p style="color: #374151; font-size: 16px; line-height: 1.5;">
+            Thank you for signing up. Please confirm your email address by clicking the button below:
+        </p>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{ activate_url }}"
+                style="background-color: #dc2626; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                Confirm Email
+            </a>
+        </div>
+
+        <p style="color: #374151; font-size: 14px; line-height: 1.5;">
+            If the button doesn't work, you can copy and paste the following link into your browser: <br>
+            <a href="{{ activate_url }}" style="color: #dc2626; word-break: break-all;">{{ activate_url }}</a>
+        </p>
+
+        <p style="color: #374151; font-size: 14px; line-height: 1.5;">
+            If you didn't create an account, you can safely ignore this email.
+        </p>
+
+        <!-- Footer -->
+        <div
+            style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+            &copy; {% now "Y" %} SwiftCart. All rights reserved.
+        </div>
+    </div>
+</body>
+
+</html>

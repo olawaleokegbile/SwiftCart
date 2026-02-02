@@ -409,3 +409,10 @@ def update_session_cart(request):
 
     request.session.modified = True
     return JsonResponse({'cart': cart})
+
+def check_email_availability(request):
+    email = request.GET.get('email', None)
+    if email:
+        exists = User.objects.filter(email__iexact=email).exists()
+        return JsonResponse({'exists': exists})
+    return JsonResponse({'error': 'No email provided'}, status=400)

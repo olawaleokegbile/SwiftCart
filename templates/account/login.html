@@ -1,0 +1,60 @@
+{% extends 'store/auth_base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Log In | SwiftCart{% endblock %}
+{% block subtitle %}Welcome Back 👋{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold mb-6 text-center text-red-600">Log In to SwiftCart</h2>
+
+<form method="post" class="space-y-5">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+        <div class="bg-red-100 text-red-600 p-3 rounded text-sm">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <!-- Username -->
+    <div>
+        <label class="block text-gray-700 mb-1">Username / Email</label>
+        {{ form.login|add_class:"w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" }}
+        {% if form.login.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.login.errors.0 }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Password -->
+    <div>
+        <label class="block text-gray-700 mb-1">Password</label>
+        {{ form.password|add_class:"w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" }}
+        {% if form.password.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.password.errors.0 }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Remember Me -->
+    <div class="flex items-center">
+        <label class="flex items-center text-gray-600 cursor-pointer">
+            {{ form.remember|add_class:"w-4 h-4 text-red-600 focus:ring-red-500 border-gray-300 rounded" }} <span class="ml-2">Remember me</span>
+        </label>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white p-3 rounded-lg font-semibold shadow-md transition-all duration-300">
+         Log In
+    </button>
+
+    <!-- Forgot -->
+    <p class="text-center mt-4">
+        <a href="{% url 'account_reset_password' %}" class="text-sm text-red-600 hover:underline">
+            Forgot your password?
+        </a>
+    </p>
+</form>
+
+<p class="text-gray-600 mt-6 text-center">
+    New to SwiftCart?
+    <a href="{% url 'account_signup' %}" class="text-red-600 hover:underline font-medium">Create an account</a>
+</p>
+{% endblock %}

@@ -1,0 +1,2 @@
+{% load account %}{% load i18n %}{% user_display user as user_display %}
+{% blocktranslate %}You're receiving this email because you need to confirm your email address for your SwiftCart account. Please follow this link: {{ activate_url }}{% endblocktranslate %}
