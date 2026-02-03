@@ -1,48 +1,86 @@
 {% extends 'store/main.html' %}
+
 {% block content %}
-<div class="p-6">
-    <h1 class="text-3xl font-bold mb-6">Checkout</h1>
-    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="max-w-6xl mx-auto px-4 py-10">
+    <div class="flex items-end justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-extrabold text-gray-900">Checkout</h1>
+            <p class="text-gray-500 mt-1">Provide delivery details and complete your order securely.</p>
+        </div>
+        <a href="{% url 'cart' %}" class="inline-flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-700">
+            <span>&larr;</span>
+            <span>Back to Cart</span>
+        </a>
+    </div>
+
+    <form method="POST" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {% csrf_token %}
-        <!-- Shipping -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-4">Shipping Information</h2>
-            {% if not user.is_authenticated %}
-                <div class="mb-4 space-y-3">
-                    <p class="text-sm text-gray-500 mb-2 font-medium">Contact Details</p>
-                    <input type="text" name="name" placeholder="Full Name" required class="w-full p-2 rounded border focus:ring-2 focus:ring-red-500 outline-none">
-                    <input type="email" name="email" placeholder="Email Address" required class="w-full p-2 rounded border focus:ring-2 focus:ring-red-500 outline-none">
+
+        <!-- Left: Shipping -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h2 class="text-xl font-extrabold text-gray-900 mb-4">Shipping Information</h2>
+
+                {% if not user.is_authenticated %}
+                <div class="mb-6">
+                    <p class="text-sm font-semibold text-gray-600 mb-3">Contact Details</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input type="text" name="name" placeholder="Full Name" required class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none">
+                        <input type="email" name="email" placeholder="Email Address" required class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
                 </div>
-                <hr class="my-4 border-gray-100">
-            {% endif %}
-            <p class="text-sm text-gray-500 mb-2 font-medium">Delivery Address</p>
-            <input type="text" name="address" placeholder="Street Address" required class="w-full p-2 rounded mb-3 border">
-            <input type="text" name="city" placeholder="City" required class="w-full p-2 rounded mb-3 border">
-            <input type="text" name="state" placeholder="State" required class="w-full p-2 rounded mb-3 border">
-            <input type="text" name="zipcode" placeholder="Zip Code" required class="w-full p-2 rounded border">
+                <hr class="border-gray-100">
+                {% endif %}
+
+                <div class="mt-6">
+                    <p class="text-sm font-semibold text-gray-600 mb-3">Delivery Address</p>
+                    <div class="grid grid-cols-1 gap-4">
+                        <input type="text" name="address" placeholder="Street Address" required class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <input type="text" name="city" placeholder="City" required class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none">
+                            <input type="text" name="state" placeholder="State" required class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none">
+                        </div>
+                        <input type="text" name="zipcode" placeholder="Zip Code" required class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h2 class="text-xl font-extrabold text-gray-900 mb-4">Payment Method</h2>
+                <select name="payment_method" required class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none">
+                    <option value="">Select Payment Method</option>
+                    <option value="pay_on_delivery">Pay on Delivery</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="paystack">Pay with Paystack</option>
+                </select>
+                <p class="text-xs text-gray-400 mt-3">Secure payments. Your details are protected.</p>
+            </div>
         </div>
-        <!-- Payment -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-4">Payment Method</h2>
-            <select name="payment_method" required class="w-full p-2 rounded mb-6 border">
-                <option value="">Select Payment Method</option>
-                <option value="pay_on_delivery">Pay on Delivery</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="paystack">Pay with Paystack</option>
-            </select>
-            <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
-            <ul class="mb-4 space-y-2">
-                {% for item in items %}
-                <li class="flex justify-between">
-                    <span>{{ item.product.name }} (x{{ item.quantity }})</span>
-                    <span>₦{{ item.get_total_price }}</span>
-                </li>
-                {% endfor %}
-            </ul>
-            <p class="text-lg font-bold">Total: ₦{{ order_total }}</p>
-            <button type="submit" class="mt-6 w-full bg-green-600 hover:bg-green-500 text-white py-2 rounded">Complete Order</button>
-            <a href="{% url 'cart' %}" class="mt-4 inline-block text-center w-full bg-gray-600 hover:bg-gray-500 text-white py-2 rounded">← Back to Cart</a>
-        </div>
+
+        <!-- Right: Summary -->
+        <aside class="lg:col-span-1">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
+                <h2 class="text-xl font-extrabold text-gray-900 mb-4">Order Summary</h2>
+                <div class="space-y-3 text-sm">
+                    {% for item in items %}
+                    <div class="flex items-start justify-between gap-3">
+                        <span class="text-gray-700">{{ item.product.name }} <span class="text-gray-400">x{{ item.quantity }}</span></span>
+                        <span class="font-semibold text-gray-900">&#8358;{{ item.get_total_price }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="border-t mt-4 pt-4 flex justify-between items-center">
+                    <span class="text-base font-semibold text-gray-900">Total</span>
+                    <span class="text-2xl font-extrabold text-red-600">&#8358;{{ order_total }}</span>
+                </div>
+                <button type="submit" class="mt-6 w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-red-200 transition-all active:scale-95">
+                    Complete Order
+                </button>
+                <a href="{% url 'cart' %}" class="mt-3 block w-full text-center py-3 border border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-50">
+                    Back to Cart
+                </a>
+            </div>
+        </aside>
     </form>
 </div>
 {% endblock %}

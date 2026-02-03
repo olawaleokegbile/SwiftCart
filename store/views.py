@@ -3,14 +3,14 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
 from django.core.paginator import Paginator
-from .models import Customer, Product, Order, OrderItem, ShippingAddress
+from .models import Customer, Product, Order, OrderItem, ShippingAddress, Category
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import  User
 from django.contrib.auth import authenticate, login, logout
-from .models import Customer
 from .forms import UserUpdateForm,ProfileUpdateForm
+from .utils import get_cart_data, get_cart_items_and_total
 import json
 
 
@@ -23,13 +23,25 @@ def index(request):
     return render(request, "store/index.html", context)
 
 def store(request):
+    data = get_cart_data(request)
+    cart_items = data['cart_items']
+
+    category_slug = request.GET.get('category')
+    categories = Category.objects.all()
+
     product_list = Product.objects.all().order_by('-id')
+    if category_slug:
+        product_list = product_list.filter(category__slug=category_slug)
+
     paginator = Paginator(product_list, 12)  # Increased count for better store experience
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)       
     context = {
         'products': page_obj.object_list,
-        'page_obj': page_obj,    
+        'page_obj': page_obj,
+        'cart_items': cart_items,
+        'categories': categories,
+        'current_category': category_slug,
     }
     return render(request, 'store/store.html', context)
 
@@ -108,14 +120,6 @@ def profile(request):
 
 # Helper to get or create cart for logged-in user 
 
-def get_user_order(request):
-    try:
-        customer = request.user.customer  # safely access the related Customer
-        order, created = Order.objects.get_or_create(customer=customer, complete=False)
-        return order
-    except Customer.DoesNotExist:
-        # Handle the case where the user has no linked Customer
-        raise Exception("This user is not linked to a Customer object.")
 
 # Helper to get session cart for guests 
 def get_session_cart(request):
@@ -140,49 +144,13 @@ def cart(request):
     """
     Cart page (HTML) and AJAX updater (JSON)
     """
-    cart_items = []
-    cart_total = 0
-
-    if request.user.is_authenticated:
-        order = get_user_order(request)
-        items = order.orderitem_set.all()
-
-        for item in items:
-            total_price = item.get_total_price
-            cart_items.append({
-                'product_id': item.product.id,
-                'product_name': item.product.name,
-                'image_url'  : item.product.imageURL,
-                'price': item.product.price,
-                'quantity': item.quantity,
-                'total_price': total_price
-            })
-            cart_total += total_price
-
-    else:
-        # Guest user - retrieve from session
-        cart = get_session_cart(request)
-        for product_id, quantity in cart.items():
-            try:
-                product = Product.objects.get(id=product_id)
-                total_price = product.price * quantity
-                cart_items.append({
-                    'product_id': product.id,
-                    'product_name': product.name,
-                    'image_url': product.imageURL,
-                    'price': product.price,
-                    'quantity': quantity,
-                    'total_price': total_price
-                })
-                cart_total += total_price
-            except Product.DoesNotExist:
-                continue
+    cart_items, cart_total = get_cart_items_and_total(request)
 
     # AJAX? -> return JSON (used to update the cart screen without reload)
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({
             'cart_items': cart_items,
-            'cart_total': cart_total
+            'cart_total': float(cart_total)
         })
     
     # Regular request -> render HTML
@@ -231,21 +199,28 @@ def checkout(request):
                 state=state,
                 zipcode=zipcode
             )
+            # Decrement stock
+            for item in items:
+                item.product.stock_count -= item.quantity
+                item.product.save()
+
             order.complete = True
             order.save()
-            return redirect('order_complete')  
+            return redirect('order_complete')
         else:
             # GUEST CHECKOUT: Create records in database
             name = request.POST.get('name')
             email = request.POST.get('email')
 
             # 1. Get or Create Guest Customer (linked by email)
-            guest_customer, created = Customer.objects.get_or_create(
-                email=email,
-            )
-            if created:
-                guest_customer.name = name
-                guest_customer.save()
+            existing_customer = Customer.objects.filter(email__iexact=email).order_by('id').first()
+            if existing_customer:
+                guest_customer = existing_customer
+            else:
+                guest_customer = Customer.objects.create(
+                    email=email,
+                    name=name
+                )
 
             # 2. Create the Order
             guest_order = Order.objects.create(
@@ -264,8 +239,7 @@ def checkout(request):
                 zipcode=zipcode
             )
 
-            # 4. Create OrderItems from Session Cart
-            cart = get_session_cart(request)
+            # 4. Create Order Items and Decrement Stock
             for product_id, quantity in cart.items():
                 try:
                     product = Product.objects.get(id=product_id)
@@ -274,14 +248,14 @@ def checkout(request):
                         order=guest_order,
                         quantity=quantity
                     )
+                    product.stock_count -= quantity
+                    product.save()
                 except Product.DoesNotExist:
                     continue
 
-            # 5. Store order ID in session for the summary page
-            request.session['last_guest_order_id'] = guest_order.id
-            
-            # Clear the active cart
+            # 5. Clear session cart
             request.session['cart'] = {}
+            request.session['last_guest_order_id'] = guest_order.id
             request.session.modified = True
             
             return redirect('guest_order_summary') 
@@ -348,12 +322,14 @@ def add_to_cart(request):
             order=order,
             product=product
         )
-        order_item.quantity += 1
-        order_item.save()
 
-        # Return the total number of items in cart
-        cart_count = sum([item.quantity for item in order.orderitem_set.all()])
-        return JsonResponse({'cart_count': cart_count})
+        if product.stock_count > order_item.quantity:
+            order_item.quantity += 1
+            order_item.save()
+            cart_count = sum([item.quantity for item in order.orderitem_set.all()])
+            return JsonResponse({'cart_count': cart_count})
+        else:
+            return JsonResponse({'error': 'Not enough stock available'}, status=400)
 
     return JsonResponse({'error': 'Not authenticated'}, status=401)
 
@@ -378,37 +354,57 @@ def remove_from_cart(request):
     return JsonResponse({'error': 'Not authenticated'}, status=401)
 
 def product_detail(request, pk):
-    product = Product.objects.get(id=pk)
+    product = get_object_or_404(Product, id=pk)
+    data = get_cart_data(request)
+    cart_items = data['cart_items']
 
     context = {
         'product': product,
+        'cart_items': cart_items,
     }   
     return render(request, 'store/product_detail.html', context)
 
-@csrf_exempt
 def update_session_cart(request):
-    product_id = request.GET.get('product_id')
-    action = request.GET.get('action')
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        data = {}
+
+    product_id = data.get('product_id')
+    action = data.get('action')
+
+    if not product_id or not action:
+        return JsonResponse({'error': 'Missing parameters'}, status=400)
 
     if 'cart' not in request.session:
         request.session['cart'] = {}
 
     cart = request.session['cart']
+    product_id_key = str(product_id)
 
-    if action == 'add':
-        if product_id in cart:
-            cart[product_id] += 1
-        else:
-            cart[product_id] = 1
-
-    elif action == 'remove':
-        if product_id in cart:
-            cart[product_id] -= 1
-            if cart[product_id] <= 0:
-                del cart[product_id]
-
-    request.session.modified = True
-    return JsonResponse({'cart': cart})
+    try:
+        product = Product.objects.get(id=product_id)
+        current_qty = cart.get(product_id_key, 0)
+        
+        if action == 'add':
+            if product.stock_count > current_qty:
+                cart[product_id_key] = current_qty + 1
+            else:
+                return JsonResponse({'error': 'Not enough stock available'}, status=400)
+        elif action == 'remove':
+            if current_qty > 1:
+                cart[product_id_key] = current_qty - 1
+            else:
+                del cart[product_id_key]
+        
+        request.session.modified = True
+        cart_count = sum(cart.values())
+        return JsonResponse({'cart_count': cart_count})
+    except Product.DoesNotExist:
+        return JsonResponse({'error': 'Product not found'}, status=404)
 
 def check_email_availability(request):
     email = request.GET.get('email', None)

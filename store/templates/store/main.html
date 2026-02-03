@@ -13,6 +13,9 @@
         var user = '{{ request.user }}';
         var isAuthenticated = {{  request.user.is_authenticated|yesno:"true,false" }};
     </script>
+    <form class="hidden">
+        {% csrf_token %}
+    </form>
 
     <!-- Header -->
     <header class="bg-white shadow-md sticky top-0 z-50">
@@ -59,11 +62,11 @@
                         </div>
                     </div>
                 {% else %}
-                    <a href="{% url 'account_login' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow">
+                    <a href="{% url 'account_login' %}" class="text-gray-700 hover:text-red-600 font-medium transition-colors">
                         Login
                     </a>
-                    <a href="{% url 'account_signup' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow">
-                        Register
+                    <a href="{% url 'account_signup' %}" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl font-bold shadow-md hover:shadow-lg transition-all active:scale-95">
+                        Get Started
                     </a>
                 {% endif %}
             </div>
@@ -94,6 +97,45 @@
     <footer class="bg-white border-t border-gray-200 py-6 text-center text-gray-500 text-sm">
         &copy; {% now "Y" %} SwiftCart. All rights reserved.
     </footer>
+
+    <!-- Flyout Cart Drawer -->
+    <div id="cart-drawer" class="fixed inset-0 z-[100] invisible transition-all duration-300">
+        <!-- Backdrop -->
+        <div id="cart-drawer-backdrop" class="absolute inset-0 bg-black/50 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        
+        <!-- Drawer -->
+        <div id="cart-drawer-content" class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl translate-x-full transition-transform duration-300 flex flex-col">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-800">Your Cart</h2>
+                <button id="close-cart-drawer" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Cart Items Container -->
+            <div id="cart-drawer-items" class="flex-grow overflow-y-auto p-6 space-y-4">
+                <!-- Items will be injected here via JS -->
+            </div>
+
+            <!-- Drawer Footer -->
+            <div class="p-6 border-t bg-gray-50">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="text-gray-600 font-medium">Subtotal</span>
+                    <span id="cart-drawer-total" class="text-2xl font-extrabold text-red-600">&#8358;0.00</span>
+                </div>
+                <div class="space-y-3">
+                    <a href="{% url 'cart' %}" class="block w-full text-center py-3 border border-gray-300 rounded-xl font-bold text-gray-700 hover:bg-white bg-transparent transition-all">
+                        View Full Cart
+                    </a>
+                    <a href="{% url 'checkout' %}" class="block w-full text-center py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-lg shadow-red-200 transition-all transform active:scale-95">
+                        Checkout Now
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="{% static 'js/main.js' %}?v={% now 'U' %}"></script>
 </body>

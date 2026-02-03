@@ -1,38 +1,98 @@
 window.addEventListener("load", function () {
 
-    /* ========= THEME TOGGLE ========= */
-    const toggleBtn = document.getElementById('themeToggle');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', () => {
-            const body = document.body;
-            const isDark = body.classList.contains('bg-gray-900');
+    /* ========= DRAWER ELEMENTS ========= */
+    const cartDrawer = document.getElementById('cart-drawer');
+    const cartDrawerBackdrop = document.getElementById('cart-drawer-backdrop');
+    const cartDrawerContent = document.getElementById('cart-drawer-content');
+    const closeDrawerBtn = document.getElementById('close-cart-drawer');
+    const cartIcon = document.querySelector('a[href="/cart/"]');
+    const cartCount = document.getElementById('cart-count');
 
-            body.classList.toggle('bg-gray-900', !isDark);
-            body.classList.toggle('text-gray-200', !isDark);
-            body.classList.toggle('bg-gray-100', isDark);
-            body.classList.toggle('text-gray-800', isDark);
+    /* ========= OPEN/CLOSE DRAWER ========= */
+    function openDrawer() {
+        cartDrawer.classList.remove('invisible');
+        setTimeout(() => {
+            cartDrawerBackdrop.classList.add('opacity-100');
+            cartDrawerContent.classList.remove('translate-x-full');
+        }, 10);
+        updateDrawerContent();
+    }
 
-            localStorage.setItem('theme', !isDark ? 'dark' : 'light');
+    function closeDrawer() {
+        cartDrawerBackdrop.classList.remove('opacity-100');
+        cartDrawerContent.classList.add('translate-x-full');
+        setTimeout(() => {
+            cartDrawer.classList.add('invisible');
+        }, 300);
+    }
+
+    if (cartIcon && cartDrawer) {
+        cartIcon.addEventListener('click', (e) => {
+            if (window.innerWidth > 768) { // Only show drawer on desktop for better feel
+                e.preventDefault();
+                openDrawer();
+            }
         });
+    }
 
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('bg-gray-900', 'text-gray-200');
-            document.body.classList.remove('bg-gray-100', 'text-gray-800');
-        } else {
-            document.body.classList.add('bg-gray-100', 'text-gray-800');
-            document.body.classList.remove('bg-gray-900', 'text-gray-200');
-        }
+    if (closeDrawerBtn) closeDrawerBtn.addEventListener('click', closeDrawer);
+    if (cartDrawerBackdrop) cartDrawerBackdrop.addEventListener('click', closeDrawer);
+
+    /* ========= UPDATE DRAWER CONTENT ========= */
+    function updateDrawerContent() {
+        const itemsContainer = document.getElementById('cart-drawer-items');
+        const totalContainer = document.getElementById('cart-drawer-total');
+
+        itemsContainer.innerHTML = `
+            <div class="flex justify-center py-10">
+                <svg class="animate-spin h-8 w-8 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        `;
+
+        fetch("/cart/", {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+            .then(r => r.json())
+            .then(data => {
+                let html = '';
+                if (data.cart_items.length === 0) {
+                    html = '<p class="text-center text-gray-500 py-10">Your cart is empty.</p>';
+                } else {
+                    data.cart_items.forEach(item => {
+                        html += `
+                            <div class="flex gap-4 items-center group">
+                                <img src="${item.image_url}" class="h-16 w-16 object-cover rounded-lg">
+                                <div class="flex-grow">
+                                    <h4 class="font-bold text-gray-800 text-sm truncate w-40">${item.product_name}</h4>
+                                    <p class="text-gray-500 text-xs">${item.quantity} x \u20A6${item.price.toFixed(2)}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-bold text-red-600">\u20A6${item.total_price.toFixed(2)}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                itemsContainer.innerHTML = html;
+                totalContainer.textContent = `\u20A6${data.cart_total.toFixed(2)}`;
+
+                // Update header count
+                const totalQty = data.cart_items.reduce((sum, item) => sum + item.quantity, 0);
+                if (cartCount) {
+                    cartCount.textContent = totalQty;
+                    cartCount.classList.toggle('hidden', totalQty === 0);
+                }
+            });
     }
 
     /* ========= ADD TO CART ========= */
-    const cartCount = document.getElementById('cart-count');
     document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             var productID = btn.dataset.product;
             var action = 'add';
-            console.log('productID:', productID, 'Action:', action);
-            console.log('User:', user);
 
             if (!isAuthenticated) {
                 addCookieItem(productID, action);
@@ -42,38 +102,6 @@ window.addEventListener("load", function () {
         });
     });
 
-    /* ========= SESSION CART (GUEST) ========= */
-    function addCookieItem(productId, action) {
-        console.log('User is not authenticated');
-
-        fetch(`/update_session_cart/?product_id=${productId}&action=${action}`, {
-            method: 'GET',
-        })
-            .then(response => response.json())
-            .then(data => {
-                location.reload();
-            });
-    }
-
-    /* ========= DB CART (LOGGED IN) ========= */
-    function updateUserOrder(productId, action) {
-        console.log('User is authenticated, sending data...');
-        fetch("/add_to_cart/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-CSRFToken": getCSRFToken() },
-            body: JSON.stringify({ product_id: productId })
-        })
-            .then(r => r.json())
-            .then(data => {
-                if (data.cart_count !== undefined && cartCount) {
-                    cartCount.textContent = data.cart_count;
-                    cartCount.classList.remove("hidden");
-                }
-                refreshCartPage();
-            });
-    }
-
-    /* ========= REMOVE FROM CART ========= */
     document.querySelectorAll('.remove-from-cart-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             var productID = btn.dataset.product;
@@ -82,53 +110,80 @@ window.addEventListener("load", function () {
             if (!isAuthenticated) {
                 addCookieItem(productID, action);
             } else {
-                // Currently only remove_from_cart view exists for logged in, 
-                // but we can reuse the logic or create a similar separate function.
-                // The existing remove_from_cart view logic:
-                fetch("/remove_from_cart/", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "X-CSRFToken": getCSRFToken() },
-                    body: JSON.stringify({ product_id: productID })
-                })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.cart_count !== undefined && cartCount) {
-                            cartCount.textContent = data.cart_count;
-                            if (data.cart_count <= 0) {
-                                cartCount.classList.add("hidden");
-                            }
-                        }
-                        refreshCartPage();
-                    });
+                removeUserOrder(productID);
             }
         });
     });
 
-    /* ========= Refresh Cart Page (AJAX) ========= */
-    function refreshCartPage() {
-        // Only call if we are currently ON /cart/ page
-        if (!window.location.pathname.startsWith('/cart')) return;
-
-        // For guest, we reload because session cart is server side rendered mostly
-        if (!isAuthenticated) {
-            location.reload();
-            return;
-        }
-
-        fetch("/cart/", {
-            headers: { "X-Requested-With": "XMLHttpRequest" }
+    function addCookieItem(productId, action) {
+        fetch("/update_session_cart/", {
+            method: 'POST',
+            headers: { "Content-Type": "application/json", "X-CSRFToken": getCSRFToken() },
+            body: JSON.stringify({ product_id: productId, action: action })
         })
-            .then(r => r.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.error) });
+                }
+                return response.json();
+            })
             .then(data => {
-                data.cart_items.forEach(item => {
-                    const qty = document.getElementById(`qty-${item.product_id}`);
-                    const total = document.getElementById(`total-${item.product_id}`);
-                    if (qty) qty.textContent = item.quantity;
-                    if (total) total.textContent = item.total_price.toFixed(2);
-                });
+                if (window.location.pathname.startsWith('/cart')) {
+                    location.reload();
+                } else {
+                    openDrawer();
+                }
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
 
-                const grand = document.getElementById("cart-grand-total");
-                if (grand) grand.textContent = data.cart_total.toFixed(2);
+    function updateUserOrder(productId, action) {
+        fetch("/add_to_cart/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": getCSRFToken() },
+            body: JSON.stringify({ product_id: productId })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.error) });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (window.location.pathname.startsWith('/cart')) {
+                    location.reload();
+                } else {
+                    openDrawer();
+                }
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    function removeUserOrder(productId) {
+        fetch("/remove_from_cart/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": getCSRFToken() },
+            body: JSON.stringify({ product_id: productId })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.error) });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (window.location.pathname.startsWith('/cart')) {
+                    location.reload();
+                } else {
+                    openDrawer();
+                }
+            })
+            .catch(err => {
+                alert(err.message);
             });
     }
 
@@ -147,17 +202,12 @@ window.addEventListener("load", function () {
     /* ========= AUTO DISMISS (MESSAGES) ========= */
     const messageAlerts = document.querySelectorAll('.message-alert');
     messageAlerts.forEach(alert => {
-        // Function to hide and remove the alert
         const dismiss = () => {
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-10px)';
             setTimeout(() => alert.remove(), 500);
         };
-
-        // Auto-dismiss after 5 seconds
         const timer = setTimeout(dismiss, 5000);
-
-        // Manual dismiss
         const closeBtn = alert.querySelector('.close-message');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
